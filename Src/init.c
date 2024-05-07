@@ -1685,11 +1685,18 @@ sourcehome(char *s)
     }
 
     {
+	const int h_len = strlen(h);
 	/* Let source() complain if path is too long */
-	VARARR(char, buf, strlen(h) + strlen(s) + 2);
+	VARARR(char, buf, h_len + 13 + (strlen(s) - 1) + 1);
 	sprintf(buf, "%s/%s", h, s);
 	unqueue_signals();
-	source(buf);
+	if (source(buf) == SOURCE_NOT_FOUND && h == home && s[0] == '.'
+	    && ! EMULATION(EMULATE_SH|EMULATE_KSH)) {
+	    queue_signals();
+	    sprintf(&buf[h_len + 1], ".config/zsh/%s", &s[1]);
+	    unqueue_signals();
+	    source(buf);
+	}
     }
 }
 
